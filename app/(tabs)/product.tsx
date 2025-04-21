@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
     View,
     Text,
@@ -14,16 +14,21 @@ import {
 import {Heart, ShoppingCart, Star, ChevronLeft, ChevronRight} from 'lucide-react-native';
 import {useCart} from "@/contexts/CartContext";
 import {RootStackParamList} from "@/types/navigation";
-import {useRoute, RouteProp} from '@react-navigation/native';
+import {useRoute, RouteProp, useNavigation, NavigationProp} from '@react-navigation/native';
 import {useAuth} from "@/contexts/AuthContext";
 import {styles} from "@/styles/ProductScreen";
+import {ProductDto} from "@/types/models";
+import api from "@/services/api";
+import Notification from "@/components/Notification";
 
 const {width} = Dimensions.get('window');
 
 export default function ProductScreen() {
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const {user, openAuthModal} = useAuth();
     const route = useRoute<RouteProp<RootStackParamList, 'product'>>();
     const {product} = route.params;
+    const [randomProducts, setRandomProducts] = useState<ProductDto[]>([]);
     const {addToCart} = useCart();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
@@ -49,21 +54,36 @@ export default function ProductScreen() {
             openAuthModal();
             return;
         }
-        addToCart({
-            productId: product.productId,
-            productName: product.productName,
-            price: product.price,
-            quantity: quantity,
-            imageUrl: product.imagesUrl?.[0] || '',
-            maxQuantity: product.quantity,
-            category: undefined,
-            averageRating: product.averageRating,
-            categoryId: product.categoryId,
-            description: product.description,
-            imagesUrl: product.imagesUrl,
-            totalFeedbacks: 0,
+        try {
+            addToCart({
+                productId: product.productId,
+                productName: product.productName,
+                price: product.price,
+                quantity: quantity,
+                imageUrl: product.imagesUrl?.[0] || '',
+                maxQuantity: product.quantity,
+                category: undefined,
+                averageRating: product.averageRating,
+                categoryId: product.categoryId,
+                description: product.description,
+                imagesUrl: product.imagesUrl,
+                totalFeedbacks: 0,
 
-        });
+            });
+            showNotification('Товар добавлен в корзину', 'success');
+        } catch (error) {
+            showNotification('Ошибка при добавлении в корзину', 'error');
+        }
+    };
+
+    const [activeNotification, setActiveNotification] = useState<{
+        message: string;
+        type: 'success' | 'error';
+    } | null>(null);
+
+    const showNotification = (message: string, type: 'success' | 'error') => {
+        setActiveNotification({message, type});
+        setTimeout(() => setActiveNotification(null), 3000);
     };
 
     const handleNextSlide = () => {
@@ -83,7 +103,30 @@ export default function ProductScreen() {
             openAuthModal();
             return;
         }
-        console.log('Submitting review:', reviewText);
+        showNotification('Отзыв оставлен', 'success');
+    };
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await api.get('/products');
+                const allProducts = response.data.items;
+                const filtered = allProducts.filter((p: ProductDto) =>
+                    p.productId !== product.productId
+                );
+                // Выбираем 3 случайных товара
+                const shuffled = [...filtered].sort(() => 0.5 - Math.random());
+                setRandomProducts(shuffled.slice(0, 3));
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            }
+        };
+
+        fetchProducts();
+    }, [product.productId]);
+
+    const handleRecommendationPress = (item: ProductDto) => {
+        navigation.navigate('product', {product: item});
     };
 
     const animateButton = (anim: Animated.Value, toValue: number) => {
@@ -107,6 +150,13 @@ export default function ProductScreen() {
             style={styles.container}
             contentContainerStyle={styles.contentContainer}
         >
+            {activeNotification && (
+                <Notification
+                    message={activeNotification.message}
+                    type={activeNotification.type}
+                    onClose={() => setActiveNotification(null)}
+                />
+            )}
             {/* Галерея изображений */}
             <View style={sstyles.galleryContainer}>
                 <Image
@@ -262,10 +312,11 @@ export default function ProductScreen() {
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Похожие товары</Text>
                 <View style={styles.recommendationsContainer}>
-                    {[product, product, product].map((item, index) => (
+                    {randomProducts.map((item, index) => (
                         <Pressable
                             key={index}
                             style={styles.recommendationItem}
+                            onPress={() => handleRecommendationPress(item)}
                         >
                             <Image
                                 source={{uri: item.imagesUrl?.[0]}}

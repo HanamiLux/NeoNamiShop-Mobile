@@ -19,7 +19,6 @@ api.interceptors.response.use(response => {
         response.data.items = response.data.items.map((product: any) => ({
             ...product,
             imagesUrl: product.imagesUrl?.map((url: string) => {
-                // Заменяем любой локальный хост (с любым портом) на целевой URL
                 if (!url) return url;
                 const serverUrl = Constants.expoConfig?.extra?.REACT_APP_SERVER_URL;
                 return serverUrl
