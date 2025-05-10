@@ -56,6 +56,23 @@ const getStatusColor = (status: string): string => {
     }
 };
 
+const getStatus = (status: string): string => {
+    switch (status.toLowerCase()) {
+        case "completed":
+            return "Завершен";
+        case "pending":
+            return "В ожидании";
+        case "cancelled":
+            return "Отменен";
+        case "shipped":
+            return "В пути";
+        case "processing":
+            return "В обработке";
+        default:
+            return "";
+    }
+};
+
 const ProfileScreen = () => {
     const { user, logout, openAuthModal } = useAuth();
     const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'cart'>('profile');
@@ -201,7 +218,7 @@ const ProfileScreen = () => {
             <View style={localStyles.orderHeader}>
                 <Text style={localStyles.orderNumber}>Заказ #{item.orderId}</Text>
                 <Text style={[localStyles.orderStatus, { color: getStatusColor(item.status) }]}>
-                    {item.status}
+                    {getStatus(item.status)}
                 </Text>
             </View>
             <View style={localStyles.orderProductsContainer}>

@@ -10,13 +10,13 @@ interface CartItem {
     quantity: number;
     categoryId: number;
     imagesUrl: string[];
-    averageRating: number;
+    averageRating: number | string | null;
     totalFeedbacks: number;
     imageUrl: string;
     maxQuantity: number;
-    category?: CategoryDto; // TODO СДЕЛАТЬ ОБЯЗАТЕЛЬНЫМ КОГДА БУДУТ ОТЗЫВЫ
+    category?: CategoryDto;
     orderedProducts?: OrderedProductDto[]; // Хс зачем, но пусть будет пока
-    feedbacks?: FeedbackDto[]; // TODO СДЕЛАТЬ ОБЯЗАТЕЛЬНЫМ КОГДА БУДУТ ОТЗЫВЫ
+    feedbacks?: FeedbackDto[];
 }
 
 interface CartContextType {

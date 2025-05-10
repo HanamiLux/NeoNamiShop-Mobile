@@ -6,7 +6,7 @@ export interface ProductDto {
     quantity: number;
     categoryId: number;
     imagesUrl: string[];
-    averageRating: number;
+    averageRating: number | string | null;
     totalFeedbacks: number;
     category: CategoryDto;
     orderedProducts: OrderedProductDto[];
@@ -86,9 +86,12 @@ export interface Order {
 
 export interface FeedbackDto {
     feedbackId: number;
-    content: string;
-    rate: number;
     userId: string;
+    rate: number;
+    productId: number;
+    content: string;
+    date: Date;
+    userLogin: string;
 }
 
 export interface CategoryDto {
